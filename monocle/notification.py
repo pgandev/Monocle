@@ -848,7 +848,7 @@ class Notifier:
 
         payload = {
             'username': '{p} Boss'.format(p=name),
-            'avatar_url': 'https://raw.githubusercontent.com/kvangent/PokeAlarm/master/icon/{i}.png'.format(i=raidinfo['pokemon_id']),
+            'avatar_url': 'https://raw.githubusercontent.com/kvangent/PokeAlarm/master/icons/{i}.png'.format(i=raidinfo['pokemon_id']),
             'embeds': [{
                 'title': '{p} Raid!'.format(p=name),
                 'url': map,
@@ -857,7 +857,7 @@ class Notifier:
                     s=start.strftime('%I:%M %p').lstrip('0'), e=end.strftime('%I:%M %p').lstrip('0'), t=team, m=map,
                     a=details['address'], cty=details['city'], cnty=details['county']
                 ),
-                'thumbnail': {'url': 'https://raw.githubusercontent.com/kvangent/PokeAlarm/master/icon/{i}.png'.format(i=raidinfo['pokemon_id']) }
+                'thumbnail': {'url': 'https://raw.githubusercontent.com/kvangent/PokeAlarm/master/icons/{i}.png'.format(i=raidinfo['pokemon_id']) }
             }]
         }
 

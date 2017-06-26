@@ -811,12 +811,8 @@ class Notifier:
             _tz = timezone(timedelta(hours=conf.TZ_OFFSET))
         else:
             _tz = None
-        now = datetime.now(_tz)
-        delta = timedelta(milliseconds=raidinfo['raid_start'])
-        start = now + delta #.strftime('%I:%M %p').lstrip('0')
-
-        delta = timedelta(milliseconds=raidinfo['raid_end'])
-        end = start + delta
+        start = datetime.fromtimestamp(raidinfo['raid_start'], _tz)
+        end = datetime.fromtimestamp(raidinfo['raid_end'], _tz)
 
         map = self.get_gmaps_link(lat, lon)
 

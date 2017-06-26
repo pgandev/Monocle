@@ -848,12 +848,11 @@ class Notifier:
 
         payload = {
             'username': '{p} Boss'.format(p=name),
-            'avatar_url': 'https://raw.githubusercontent.com/kvangent/PokeAlarm/master/icons/{i}.png'.format(i=raidinfo['pokemon_id']),
             'embeds': [{
                 'title': '{p} Raid!'.format(p=name),
                 'url': map,
-                'description': '**{p}** - Level: {l} - CP: {c}\n**Address:** {a}, {cty}\n**County:** {cnty}\n\n**Moveset:** {m1}/{m2}\n\n**Start:** {s}\n**End:** {e}\n\n**Current Team:** {t}\n\n**Map:** {m}'.format(
-                    p=name, l=raidinfo['raid_level'], c=raidinfo['cp'], m1=move_1, m2=move_2,
+                'description': '**Level:** {l} - **CP:** {c}\n**Address:** {a}, {cty}\n**County:** {cnty}\n\n**Moveset:** {m1}/{m2}\n\n**Start:** {s}\n**End:** {e}\n\n**Current Team:** {t}\n\n**Map:** {m}'.format(
+                    l=raidinfo['raid_level'], c=raidinfo['cp'], m1=move_1, m2=move_2,
                     s=start.strftime('%I:%M %p').lstrip('0'), e=end.strftime('%I:%M %p').lstrip('0'), t=team, m=map,
                     a=details['address'], cty=details['city'], cnty=details['county']
                 ),

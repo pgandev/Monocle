@@ -823,11 +823,28 @@ class Notifier:
         move_1 = MOVES[raidinfo['move_1']]
         move_2 = MOVES[raidinfo['move_2']]
         
+        details = {
+            'street_num': 'unkn', 'street': 'unknown', 'address': 'unknown', 'postal': 'unknown',
+            'neighborhood': 'unknown', 'sublocality': 'unknown', 'city': 'unknown',
+            'county': 'unknown', 'state': 'unknown', 'country': 'country'
+        }
+        
         result = self.gmaps_client.reverse_geocode((lat, lon))[0]
         loc = {}
         for item in result['address_components']:
             for category in item['types']:
                 loc[category] = item['short_name']
+                
+        details['street_num'] = loc.get('street_number', 'unkn')
+        details['street'] = loc.get('route', 'unkn')
+        details['address'] = "{} {}".format(details['street_num'], details['street'])
+        details['postal'] = loc.get('postal_code', 'unkn')
+        details['neighborhood'] = loc.get('neighborhood', "unknown")
+        details['sublocality'] = loc.get('sublocality', "unknown")
+        details['city'] = loc.get('locality', loc.get('postal_town', 'unknown'))
+        details['county'] = loc.get('administrative_area_level_2', 'unknown')
+        details['state'] = loc.get('administrative_area_level_1', 'unknown')
+        details['country'] = loc.get('country', 'unknown')
 
         payload = {
             'embeds': [{
@@ -836,8 +853,7 @@ class Notifier:
                 'description': '**{p}** - Level: {l} - CP: {c}\n**Address:** {a}, {cty}\n**County:** {cnty}\n\n**Moveset:** {m1}/{m2}\n\n**Start:** {s}\n**End:** {e}\n\n**Current Team:** {t}\n\n**Map:** {m}'.format(
                     p=name, l=raidinfo['raid_level'], c=raidinfo['cp'], m1=move_1, m2=move_2,
                     s=start.strftime('%I:%M %p').lstrip('0'), e=end.strftime('%I:%M %p').lstrip('0'), t=team, m=map,
-                    a="{} {}".format(details['street_num'], details['street']), cty=loc.get('locality', loc.get('postal_town', 'unknown')),
-                    cnty=loc.get('administrative_area_level_2', 'unknown')
+                    a=details['address'], cty=details['city'], cnty=details['county']
                 ),
                 'thumbnail': {'url': 'https://raw.githubusercontent.com/kvangent/PokeAlarm/master/icon/{i}.png'.format(i=raidinfo['pokemon_id']) }
             }]

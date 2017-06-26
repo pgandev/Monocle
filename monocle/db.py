@@ -15,7 +15,7 @@ from .shared import call_at, get_logger
 
 if conf.NOTIFY:
     from .notification import Notifier
-        notifier = Notifier()
+    notifier = Notifier()
 
 try:
     assert conf.LAST_MIGRATION < time()

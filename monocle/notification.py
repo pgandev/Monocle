@@ -847,6 +847,8 @@ class Notifier:
         details['country'] = loc.get('country', 'unknown')
 
         payload = {
+            'username': '{p} Boss'.format(p=name),
+            'avatar_url': 'https://raw.githubusercontent.com/kvangent/PokeAlarm/master/icon/{i}.png'.format(i=raidinfo['pokemon_id']),
             'embeds': [{
                 'title': '{p} Raid!'.format(p=name),
                 'url': map,

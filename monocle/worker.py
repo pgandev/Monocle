@@ -843,8 +843,6 @@ class Worker:
                             normalized_raid['move_2'] = raid_info.raid_pokemon.move_2
                         if normalized_raid not in RAID_CACHE:
                             db_proc.add(normalized_raid)
-                            LOOP.create_task(self.notifier.raid_webhook(normalized_raid, fort.latitude, fort.longitude, fort.owned_by_team))
-                            self.log.info('Sent raid web hook info.')
 
             if more_points:
                 try:

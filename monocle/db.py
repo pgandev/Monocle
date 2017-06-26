@@ -13,6 +13,10 @@ from . import bounds, spawns, db_proc, sanitized as conf
 from .utils import time_until_time, dump_pickle, load_pickle
 from .shared import call_at, get_logger
 
+if conf.NOTIFY:
+    from .notification import Notifier
+        notifier = Notifier()
+
 try:
     assert conf.LAST_MIGRATION < time()
 except AssertionError:
@@ -567,6 +571,9 @@ def add_raid_info(session, raw_raid):
         )
         RAID_CACHE.add(raw_raid)
         session.add(raid)
+
+        await notifier.raid_webhook(normalized_raid, fort.latitude, fort.longitude, fort.owned_by_team)
+        self.log.info('Sent raid web hook info.')
     else:
         if raid.pokemon_id is None and raw_raid.get('pokemon_id') is not None:
             raid.pokemon_id = raw_raid['pokemon_id']

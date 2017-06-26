@@ -798,7 +798,7 @@ class Notifier:
         """
         self.log.info('Beginning webhook consruction.')
         if not conf.RAID_WEBHOOK:
-            return False
+            return None
 
         name = POKEMON[raidinfo['pokemon_id']]
         self.log.info('Parsing webhook for {}.', name)
@@ -839,8 +839,8 @@ class Notifier:
 
     # Returns a static map url with <lat> and <lng> parameters for dynamic test
     def get_static_map_url(self, lat, lng, api_key=None):  # TODO: optimize formatting
-        if not parse_boolean(settings.get('enabled', 'True')):
-            return None
+        #if not parse_boolean(settings.get('enabled', 'True')):
+            #return None
         width = '250'
         height = '125'
         maptype = 'roadmap'

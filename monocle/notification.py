@@ -826,7 +826,7 @@ class Notifier:
             }]
         }
         
-        payload['embeds'][0]['image'] = {'url': self.get_static_map_url(raidinfo['lat'], raidinfo['lon'], conf.GOOGLE_MAPS_KEY}
+        payload['embeds'][0]['image'] = {'url': self.get_static_map_url(raidinfo['lat'], raidinfo['lon'], conf.GOOGLE_MAPS_KEY)}
 
         session = SessionManager.get()
         return await self.hook_post(conf.RAID_WEBHOOK, session, payload)

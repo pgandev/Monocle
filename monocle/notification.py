@@ -15,6 +15,7 @@ from .names import MOVES, POKEMON
 from .shared import get_logger, SessionManager, LOOP, run_threaded
 from . import sanitized as conf
 
+import googlemaps
 
 WEBHOOK = False
 if conf.NOTIFY:
@@ -581,6 +582,9 @@ class Notifier:
         self.never_notify = conf.NEVER_NOTIFY_IDS
         self.rarity_override = conf.RARITY_OVERRIDE
         self.sent = 0
+        self.gmaps_client = \
+            googlemaps.Client(key=conf.GOOGLE_MAPS_KEY, timeout=3, retry_timeout=4) if conf.GOOGLE_MAPS_KEY is not None else None
+			
         if self.notify_ranking:
             self.initialize_ranking()
             LOOP.call_later(3600, self.set_notify_ids)
@@ -818,14 +822,22 @@ class Notifier:
 
         move_1 = MOVES[raidinfo['move_1']]
         move_2 = MOVES[raidinfo['move_2']]
+		
+		result = self.gmaps_client.reverse_geocode((lat, lon))[0]
+		loc = {}
+		for item in result['address_components']:
+			for category in item['types']:
+				loc[category] = item['short_name']
 
         payload = {
             'embeds': [{
                 'title': '{p} Raid!'.format(p=name),
                 'url': map,
-                'description': '**{p}** - Level: {l} - CP: {c}\n\n**Moveset:** {m1}/{m2}\n\n**Start:** {s}\n**End:** {e}\n\n**Current Team:** {t}\n\n**Map:** {m}'.format(
+                'description': '**{p}** - Level: {l} - CP: {c}\n**Address:** {a}, {cty}\n**County:** {cnty}\n\n**Moveset:** {m1}/{m2}\n\n**Start:** {s}\n**End:** {e}\n\n**Current Team:** {t}\n\n**Map:** {m}'.format(
                     p=name, l=raidinfo['raid_level'], c=raidinfo['cp'], m1=move_1, m2=move_2,
-                    s=start.strftime('%I:%M %p').lstrip('0'), e=end.strftime('%I:%M %p').lstrip('0'), t=team, m=map
+                    s=start.strftime('%I:%M %p').lstrip('0'), e=end.strftime('%I:%M %p').lstrip('0'), t=team, m=map,
+					a="{} {}".format(details['street_num'], details['street']), cty=loc.get('locality', loc.get('postal_town', 'unknown')),
+					cnty=loc.get('administrative_area_level_2', 'unknown')
                 ),
                 'thumbnail': {'url': 'https://raw.githubusercontent.com/kvangent/PokeAlarm/master/icon/{i}.png'.format(i=raidinfo['pokemon_id']) }
             }]

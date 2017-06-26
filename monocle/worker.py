@@ -842,7 +842,7 @@ class Worker:
                             normalized_raid['move_1'] = raid_info.raid_pokemon.move_1
                             normalized_raid['move_2'] = raid_info.raid_pokemon.move_2
                         if normalized_raid not in RAID_CACHE:
-                            db_proc.add(normalized_raid, self.notifier)
+                            db_proc.add(normalized_raid)
 
             if more_points:
                 try:

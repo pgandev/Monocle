@@ -816,12 +816,15 @@ class Notifier:
 
         map = self.get_gmaps_link(lat, lon)
 
+        move_1 = MOVES[raidinfo['move_1']]
+        move_2 = MOVES[raidinfo['move_2']]
+
         payload = {
             'embeds': [{
                 'title': '{p} Raid!'.format(p=name),
                 'url': map,
                 'description': '**{p}** - Level: {l} - CP: {c}\n\n**Moveset:** {m1}/{m2}\n\n**Start:** {s}\n**End:** {e}\n\n**Current Team:** {t}\n\n**Map:** {m}'.format(
-                    p=name, l=raidinfo['raid_level'], c=raidinfo['cp'], m1=raidinfo['move_1'], m2=raidinfo['move_2'],
+                    p=name, l=raidinfo['raid_level'], c=raidinfo['cp'], m1=move_1, m2=move_2,
                     s=start.strftime('%I:%M %p').lstrip('0'), e=end.strftime('%I:%M %p').lstrip('0'), t=team, m=map
                 ),
                 'thumbnail': {'url': 'https://raw.githubusercontent.com/kvangent/PokeAlarm/master/icon/{i}.png'.format(i=raidinfo['pokemon_id']) }

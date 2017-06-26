@@ -796,12 +796,12 @@ class Notifier:
     async def raid_webhook(self, raidinfo, lat, lon, team):
         """ Send a discord notification via webhook
         """
-		self.log.info('Beginning webhook consruction.')
+        self.log.info('Beginning webhook consruction.')
         if not conf.RAID_WEBHOOK:
             return False
 
         name = POKEMON[raidinfo['pokemon_id']]
-		self.log.info('Parsing webhook for {}.', name)
+        self.log.info('Parsing webhook for {}.', name)
 
         if conf.TZ_OFFSET:
             _tz = timezone(timedelta(hours=conf.TZ_OFFSET))

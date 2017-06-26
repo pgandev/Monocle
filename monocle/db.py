@@ -13,10 +13,6 @@ from . import bounds, spawns, db_proc, sanitized as conf
 from .utils import time_until_time, dump_pickle, load_pickle
 from .shared import call_at, get_logger
 
-if conf.NOTIFY:
-    from .notification import Notifier
-    notifier = Notifier()
-
 try:
     assert conf.LAST_MIGRATION < time()
 except AssertionError:
@@ -546,7 +542,7 @@ def add_fort_sighting(session, raw_fort):
     session.add(obj)
     FORT_CACHE.add(raw_fort)
 
-def add_raid_info(session, raw_raid):
+def add_raid_info(session, raw_raid, notifier):
     # Check if raid_seed exists
     raid = session.query(RaidInfo) \
         .filter(RaidInfo.raid_seed == raw_raid['raid_seed']) \

@@ -793,6 +793,9 @@ class Notifier:
         session = SessionManager.get()
         return await self.wh_send(session, data)
 
+    def raid_eligible(self, raidinfo):
+        return raidinfo['raid_seed'] in self.cache
+
     async def raid_webhook(self, raidinfo, lat, lon, team):
         """ Send a discord notification via webhook
         """

@@ -795,7 +795,7 @@ class Notifier:
         return await self.wh_send(session, data)
 
     def raid_eligible(self, raidinfo):
-        return raidinfo['raid_seed'] not in self.cache
+        return raidinfo['raid_seed'] not in self.raid_cache
 
     async def raid_webhook(self, raidinfo, lat, lon, team):
         """ Send a discord notification via webhook

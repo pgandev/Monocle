@@ -808,10 +808,10 @@ class Notifier:
         else:
             _tz = None
         now = datetime.now(_tz)
-        delta = timedelta(milliseconds=raidinfo['raid_battle_ms'])
+        delta = timedelta(milliseconds=raidinfo['raid_start'])
         start = now + delta #.strftime('%I:%M %p').lstrip('0')
 
-        delta = timedelta(milliseconds=raidinfo['raid_end_ms'])
+        delta = timedelta(milliseconds=raidinfo['raid_end'])
         end = start + delta
 
         map = self.get_gmaps_link(lat, lon)

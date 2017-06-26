@@ -21,10 +21,13 @@ var PokemonIcon = L.Icon.extend({
 });
 
 var FortIcon = L.Icon.extend({
-    options: {
-        iconSize: [20, 20],
-        popupAnchor: [0, -10],
-        className: 'fort-icon'
+    createIcon: function() {
+        var div = document.createElement('div');
+        div.innerHTML =
+            '<div class="gymmarker fort-icon" id="' + this.options.id + '">' +
+            '<img src="' + this.options.iconUrl + '" />' +
+            '</div>';
+        return div;
     }
 });
 var WorkerIcon = L.Icon.extend({
@@ -162,32 +165,25 @@ function PokemonMarker (raw) {
 }
 
 function FortMarker (raw) {
-    var icon = new FortIcon({iconUrl: '/static/monocle-icons/forts/' + raw.team + '.png'});
+    var icon = new FortIcon({iconUrl: '/static/monocle-icons/forts/' + raw.team + '.png', id: raw.id});
     var marker = L.marker([raw.lat, raw.lon], {icon: icon, opacity: 1});
     marker.raw = raw;
     markers[raw.id] = marker;
-    marker.on('popupopen',function popupopen (event) {
-        var content = ''
-        if (raw.team === 0) {
-            content = '<b>An empty Gym!</b>'
-        }
-        else {
-            if (raw.team === 1 ) {
-                content = '<b>Team Mystic</b>'
-            }
-            else if (raw.team === 2 ) {
-                content = '<b>Team Valor</b>'
-            }
-            else if (raw.team === 3 ) {
-                content = '<b>Team Instinct</b>'
-            }
-            content += '<br>Prestige: ' + raw.prestige +
-                       '<br>Guarding Pokemon: ' + raw.pokemon_name + ' (#' + raw.pokemon_id + ')';
-        }
-        content += '<br>=&gt; <a href=https://www.google.com/maps/?daddr='+ raw.lat + ','+ raw.lon +' target="_blank" title="See in Google Maps">Get directions</a>';
-        event.popup.setContent(content);
-    });
-    marker.bindPopup();
+    var content = ''
+    if (raw.team === 0) {
+        content = '<b>An empty Gym!</b>'
+    } else if (raw.team === 1) {
+        content = '<b>Team Mystic</b>'
+    } else if (raw.team === 2) {
+        content = '<b>Team Valor</b>'
+    } else if (raw.team === 3) {
+        content = '<b>Team Instinct</b>'
+    }
+    content += '<br>Slots available: ' + (raw.slots_available || 0) +
+        '<br>In battle: ' + (raw.in_battle || false)
+        '<br>Guarding Pokemon: ' + raw.pokemon_name + ' (#' + raw.pokemon_id + ')';
+    content += '<br>=&gt; <a href=https://www.google.com/maps/?daddr='+ raw.lat + ','+ raw.lon +' target="_blank" title="See in Google Maps">Get directions</a>';
+    marker.bindPopup(content);
     return marker;
 }
 
@@ -230,6 +226,60 @@ function addGymsToMap (data, map) {
         }
         marker = FortMarker(item);
         marker.addTo(overlays.Gyms);
+    });
+}
+
+function addRaidsToMap(data) {
+    let currentTime = new Date().getTime() / 1000;
+    data.forEach(function (item) {
+        let html = '';
+        let marker = markers['fort-' + item.fort_id];
+        let popup = marker.getPopup();
+        marker.default = popup.getContent();
+        if (marker.raw.team === 0) {
+            html += '<b>An empty Gym!</b>';
+        }else if (marker.raw.team === 1 ) {
+            html += '<b>Team Mystic</b>';
+            $('#fort-' + item.fort_id).css('background', '#2196f3');
+        }else if (marker.raw.team === 2 ) {
+            html += '<b>Team Valor</b>';
+            $('#fort-' + item.fort_id).css('background', '#d32f2f');
+        }else if (marker.raw.team === 3 ) {
+            html += '<b>Team Instinct</b>';
+            $('#fort-' + item.fort_id).css('background', '#ffeb3b');
+        }
+        if (item.raid_start > currentTime) {
+            $('#fort-' + item.fort_id + ' > img').attr('src', '/static/img/egg-'+item.raid_level+'.png');
+            html += `<br>Slots available: ${(marker.raw.slots_available || 0)}
+                <br>In battle: ${(marker.raw.in_battle || false)}
+                <br>Guarding Pokemon: ${marker.raw.pokemon_name} (#${marker.raw.pokemon_id})
+                <br>Raid level: ${item.raid_level}
+                <br>Raid starts in: <span class="raid-timer" data-timer="${item.raid_start}">${calculateRemainingTime(item.raid_start)}</span>
+                <br>=&gt; <a href="https://www.google.com/maps/?daddr=${marker.raw.lat},${marker.raw.lon}" target="_blank" title="See in Google Maps">Get directions</a>`;
+            popup.setContent(html);
+            popup.update();
+
+        } else if (item.raid_start < currentTime && item.raid_end > currentTime) {
+            if (!item.pokemon_id) {
+                html += `<br><b>NO DATA ABOUT RAIDS AVAILABLE</b><br>
+                    <b>Raid level:</b> ${item.raid_level}<br>
+                    <b>Raid ends in:</b> <span class="raid-timer" data-timer="${item.raid_end}">${calculateRemainingTime(item.raid_end)}</span><br>`;
+            } else {
+                $('#fort-' + item.fort_id + ' > img').attr('src', '/static/monocle-icons/icons/' + item.pokemon_id + '.png')
+                html += `<br><b>${item.pokemon_name}</b> - <a href="https://pokemongo.gamepress.gg/pokemon/'${item.pokemon_id}">#${item.pokemon_id}</a><br>
+                        <b>Moveset:</b> ${item.move_1} / ${item.move_2} <br>
+                        <b>CP:</b> ${item.cp} <br>
+                        <b>Raid level:</b> ${item.raid_level}<br>
+                        <b>Raid ends in:</b> <span class="raid-timer" data-timer="${item.raid_end}">${calculateRemainingTime(item.raid_end)}</span><br>
+                        <br>=&gt; <a href="https://www.google.com/maps/?daddr=${marker.raw.lat},${marker.raw.lon}" target="_blank" title="See in Google Maps">Get directions</a`;
+            }
+            popup.setContent(html);
+            popup.update();
+        }else {
+            $('#fort-' + item.fort_id).css('background', '#fff');
+            popup.setContent(marker.default);
+            popup.update();
+        }
     });
 }
 
@@ -298,12 +348,21 @@ function getGyms () {
     if (overlays.Gyms.hidden) {
         return;
     }
-    new Promise(function (resolve, reject) {
+    let promises = [];
+
+    promises.push(new Promise(function (resolve, reject) {
         $.get('/gym_data', function (response) {
             resolve(response);
         });
-    }).then(function (data) {
-        addGymsToMap(data, map);
+    }));
+    promises.push(new Promise(function (resolve, reject) {
+        $.get('/raid_data', function (response) {
+            resolve(response);
+        });
+    }));
+    Promise.all(promises).then(function (data) {
+        addGymsToMap(data[0], map);
+        addRaidsToMap(data[1]);
     });
 }
 
@@ -548,4 +607,8 @@ function updateTime() {
             $(this).css('visibility', 'hidden');
         });
     }
+    $('.raid-timer').each(function (){
+        let time = $(this).data('timer');
+        $(this).text(calculateRemainingTime(time));
+    });
 }

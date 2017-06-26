@@ -833,12 +833,12 @@ class Notifier:
         session = SessionManager.get()
         return await self.hook_post(conf.RAID_WEBHOOK, session, payload)
 
-    def get_gmaps_link(lat, lng):
+    def get_gmaps_link(self, lat, lng):
         latlng = '{},{}'.format(repr(lat), repr(lng))
         return 'http://maps.google.com/maps?q={}'.format(latlng)
 
     # Returns a static map url with <lat> and <lng> parameters for dynamic test
-    def get_static_map_url(lat, lng, api_key=None):  # TODO: optimize formatting
+    def get_static_map_url(self, lat, lng, api_key=None):  # TODO: optimize formatting
         if not parse_boolean(settings.get('enabled', 'True')):
             return None
         width = '250'

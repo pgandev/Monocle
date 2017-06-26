@@ -793,7 +793,7 @@ class Notifier:
         session = SessionManager.get()
         return await self.wh_send(session, data)
 
-    async def raid_webhook(self, raidinfo):
+    async def raid_webhook(self, raidinfo, lat, lon, team):
         """ Send a discord notification via webhook
         """
         if not conf.RAID_WEBHOOK:
@@ -808,29 +808,29 @@ class Notifier:
         now = datetime.now(_tz)
         delta = timedelta(milliseconds=raidinfo['raid_battle_ms'])
         start = now + delta #.strftime('%I:%M %p').lstrip('0')
-        
+
         delta = timedelta(milliseconds=raidinfo['raid_end_ms'])
         end = start + delta
-        
-        map = self.get_gmaps_link(raidinfo['lat'], raidinfo['lon'])
-        
+
+        map = self.get_gmaps_link(lat, lon)
+
         payload = {
             'embeds': [{
                 'title': '{p} Raid!'.format(p=name),
                 'url': map,
                 'description': '**{p}** - Level: {l} - CP: {c}\n\n**Moveset:** {m1}/{m2}\n\n**Start:** {s}\n**End:** {e}\n\n**Current Team:** {t}\n\n**Map:** {m}'.format(
                     p=name, l=raidinfo['raid_level'], c=raidinfo['cp'], m1=raidinfo['move_1'], m2=raidinfo['move_2'],
-                    s=start.strftime('%I:%M %p').lstrip('0'), e=end.strftime('%I:%M %p').lstrip('0'), t=raidinfo['team'], m=map
+                    s=start.strftime('%I:%M %p').lstrip('0'), e=end.strftime('%I:%M %p').lstrip('0'), t=team, m=map
                 ),
                 'thumbnail': {'url': 'https://raw.githubusercontent.com/kvangent/PokeAlarm/master/icon/{i}.png'.format(i=raidinfo['pokemon_id']) }
             }]
         }
-        
-        payload['embeds'][0]['image'] = {'url': self.get_static_map_url(raidinfo['lat'], raidinfo['lon'], conf.GOOGLE_MAPS_KEY)}
+
+        payload['embeds'][0]['image'] = {'url': self.get_static_map_url(lat, lon, conf.GOOGLE_MAPS_KEY)}
 
         session = SessionManager.get()
         return await self.hook_post(conf.RAID_WEBHOOK, session, payload)
-        
+
     def get_gmaps_link(lat, lng):
         latlng = '{},{}'.format(repr(lat), repr(lng))
         return 'http://maps.google.com/maps?q={}'.format(latlng)

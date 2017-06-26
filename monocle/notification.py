@@ -793,6 +793,72 @@ class Notifier:
         session = SessionManager.get()
         return await self.wh_send(session, data)
 
+    async def raid_webhook(self, raidinfo):
+        """ Send a discord notification via webhook
+        """
+        if not conf.RAID_WEBHOOK:
+            return False
+
+        name = POKEMON[raidinfo['pokemon_id']]
+
+        if conf.TZ_OFFSET:
+            _tz = timezone(timedelta(hours=conf.TZ_OFFSET))
+        else:
+            _tz = None
+        now = datetime.now(_tz)
+        delta = timedelta(milliseconds=raidinfo['raid_battle_ms'])
+        start = now + delta #.strftime('%I:%M %p').lstrip('0')
+        
+        delta = timedelta(milliseconds=raidinfo['raid_end_ms'])
+        end = start + delta
+        
+        map = self.get_gmaps_link(raidinfo['lat'], raidinfo['lon'])
+        
+        payload = {
+            'embeds': [{
+                'title': '{p} Raid!'.format(p=name),
+                'url': map,
+                'description': '**{p}** - Level: {l} - CP: {c}\n\n**Moveset:** {m1}/{m2}\n\n**Start:** {s}\n**End:** {e}\n\n**Current Team:** {t}\n\n**Map:** {m}'.format(
+                    p=name, l=raidinfo['raid_level'], c=raidinfo['cp'], m1=raidinfo['move_1'], m2=raidinfo['move_2'],
+                    s=start.strftime('%I:%M %p').lstrip('0'), e=end.strftime('%I:%M %p').lstrip('0'), t=raidinfo['team'], m=map
+                ),
+                'thumbnail': {'url': 'https://raw.githubusercontent.com/kvangent/PokeAlarm/master/icon/{i}.png'.format(i=raidinfo['pokemon_id']) }
+            }]
+        }
+        
+        payload['embeds'][0]['image'] = {'url': self.get_static_map_url(raidinfo['lat'], raidinfo['lon'], conf.GOOGLE_MAPS_KEY}
+
+        session = SessionManager.get()
+        return await self.hook_post(conf.RAID_WEBHOOK, session, payload)
+        
+    def get_gmaps_link(lat, lng):
+        latlng = '{},{}'.format(repr(lat), repr(lng))
+        return 'http://maps.google.com/maps?q={}'.format(latlng)
+
+    # Returns a static map url with <lat> and <lng> parameters for dynamic test
+    def get_static_map_url(lat, lng, api_key=None):  # TODO: optimize formatting
+        if not parse_boolean(settings.get('enabled', 'True')):
+            return None
+        width = '250'
+        height = '125'
+        maptype = 'roadmap'
+        zoom = '15'
+
+        center = '{},{}'.format(lat, lng)
+        query_center = 'center={}'.format(center)
+        query_markers = 'markers=color:red%7C{}'.format(center)
+        query_size = 'size={}x{}'.format(width, height)
+        query_zoom = 'zoom={}'.format(zoom)
+        query_maptype = 'maptype={}'.format(maptype)
+
+        map_ = ('https://maps.googleapis.com/maps/api/staticmap?' +
+                query_center + '&' + query_markers + '&' +
+                query_maptype + '&' + query_size + '&' + query_zoom)
+
+        if api_key is not None:
+            map_ += ('&key=%s' % api_key)
+        return map_
+
     if WEBHOOK > 1:
         async def wh_send(self, session, payload):
             results = await gather(*tuple(self.hook_post(w, session, payload) for w in HOOK_POINTS), loop=LOOP)

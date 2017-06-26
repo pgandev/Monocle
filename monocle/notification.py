@@ -571,6 +571,7 @@ class Notifier:
 
     def __init__(self):
         self.cache = NotificationCache()
+        self.raid_cache = NotificationCache()
         self.notify_ranking = conf.NOTIFY_RANKING
         self.initial_score = conf.INITIAL_SCORE
         self.minimum_score = conf.MINIMUM_SCORE
@@ -831,6 +832,7 @@ class Notifier:
             }]
         }
 
+        self.raid_cache.add(raidinfo['raid_seed'], 3600)
         payload['embeds'][0]['image'] = {'url': self.get_static_map_url(lat, lon, conf.GOOGLE_MAPS_KEY)}
 
         session = SessionManager.get()

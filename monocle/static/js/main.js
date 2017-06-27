@@ -156,7 +156,7 @@ function PokemonMarker (raw) {
             marker.setOpacity(getOpacity(diff));
         } else {
             marker.removeFrom(overlays[marker.overlay]);
-            markers[marker.raw.id] = undefined;
+            delete markers[marker.raw.id];
             clearInterval(marker.opacityInterval);
         }
     }, 2500);
@@ -183,6 +183,7 @@ function FortMarker (raw) {
         '<br>In battle: ' + (raw.in_battle || false)
         '<br>Guarding Pokemon: ' + raw.pokemon_name + ' (#' + raw.pokemon_id + ')';
     content += '<br>=&gt; <a href=https://www.google.com/maps/?daddr='+ raw.lat + ','+ raw.lon +' target="_blank" title="See in Google Maps">Get directions</a>';
+    marker.default = content;
     marker.bindPopup(content);
     return marker;
 }
@@ -235,7 +236,7 @@ function addRaidsToMap(data) {
         let html = '';
         let marker = markers['fort-' + item.fort_id];
         let popup = marker.getPopup();
-        marker.default = popup.getContent();
+        let date = null;
         if (marker.raw.team === 0) {
             html += '<b>An empty Gym!</b>';
         }else if (marker.raw.team === 1 ) {
@@ -249,34 +250,37 @@ function addRaidsToMap(data) {
             $('#fort-' + item.fort_id).css('background', '#ffeb3b');
         }
         if (item.raid_start > currentTime) {
+            date = new Date(item.raid_start*1000);
             $('#fort-' + item.fort_id + ' > img').attr('src', '/static/img/egg-'+item.raid_level+'.png');
             html += `<br>Slots available: ${(marker.raw.slots_available || 0)}
                 <br>In battle: ${(marker.raw.in_battle || false)}
                 <br>Guarding Pokemon: ${marker.raw.pokemon_name} (#${marker.raw.pokemon_id})
                 <br>Raid level: ${item.raid_level}
-                <br>Raid starts in: <span class="raid-timer" data-timer="${item.raid_start}">${calculateRemainingTime(item.raid_start)}</span>
+                <br>Raid starts in: <span class="raid-timer" data-timer="${item.raid_start}">${calculateRemainingTime(item.raid_start)}</span> (${date.toLocaleTimeString()})
                 <br>=&gt; <a href="https://www.google.com/maps/?daddr=${marker.raw.lat},${marker.raw.lon}" target="_blank" title="See in Google Maps">Get directions</a>`;
             popup.setContent(html);
             popup.update();
 
         } else if (item.raid_start < currentTime && item.raid_end > currentTime) {
+            date = new Date(item.raid_end*1000);
             if (!item.pokemon_id) {
                 html += `<br><b>NO DATA ABOUT RAIDS AVAILABLE</b><br>
                     <b>Raid level:</b> ${item.raid_level}<br>
-                    <b>Raid ends in:</b> <span class="raid-timer" data-timer="${item.raid_end}">${calculateRemainingTime(item.raid_end)}</span><br>`;
+                    <b>Raid ends in:</b> <span class="raid-timer" data-timer="${item.raid_end}">${calculateRemainingTime(item.raid_end)}</span> (${date.toLocaleTimeString()})<br>`;
             } else {
                 $('#fort-' + item.fort_id + ' > img').attr('src', '/static/monocle-icons/icons/' + item.pokemon_id + '.png')
                 html += `<br><b>${item.pokemon_name}</b> - <a href="https://pokemongo.gamepress.gg/pokemon/'${item.pokemon_id}">#${item.pokemon_id}</a><br>
                         <b>Moveset:</b> ${item.move_1} / ${item.move_2} <br>
                         <b>CP:</b> ${item.cp} <br>
                         <b>Raid level:</b> ${item.raid_level}<br>
-                        <b>Raid ends in:</b> <span class="raid-timer" data-timer="${item.raid_end}">${calculateRemainingTime(item.raid_end)}</span><br>
+                        <b>Raid ends in:</b> <span class="raid-timer" data-timer="${item.raid_end}">${calculateRemainingTime(item.raid_end)}</span> (${date.toLocaleTimeString()})<br>
                         <br>=&gt; <a href="https://www.google.com/maps/?daddr=${marker.raw.lat},${marker.raw.lon}" target="_blank" title="See in Google Maps">Get directions</a`;
             }
             popup.setContent(html);
             popup.update();
         }else {
             $('#fort-' + item.fort_id).css('background', '#fff');
+            $('#fort-' + item.fort_id + ' > img').attr('src', '/static/monocle-icons/forts/' + marker.raw.team + '.png');
             popup.setContent(marker.default);
             popup.update();
         }
@@ -590,10 +594,13 @@ $('.scroll-up').click(function () {
 });
 
 function calculateRemainingTime(expire_at_timestamp) {
-  var diff = (expire_at_timestamp - new Date().getTime() / 1000);
-        var minutes = parseInt(diff / 60);
-        var seconds = parseInt(diff - (minutes * 60));
-        return minutes + ':' + (seconds > 9 ? "" + seconds: "0" + seconds);
+    var diff = (expire_at_timestamp - new Date().getTime() / 1000);
+    if (diff < 0) {
+        return '00:00:00';
+    }
+    var minutes = parseInt(diff / 60);
+    var seconds = parseInt(diff - (minutes * 60));
+    return minutes + ':' + (seconds > 9 ? "" + seconds: "0" + seconds);
 }
 
 function updateTime() {

@@ -799,7 +799,10 @@ class Notifier:
         return await self.wh_send(session, data)
 
     def raid_eligible(self, raidinfo):
-        return raidinfo['raid_seed'] not in self.raid_cache
+        if (raidinfo['raid_seed'] not in self.raid_cache):
+            return raidinfo['raid_level'] >= conf.RAID_LEVEL_MIN;
+
+        return False
 
     async def raid_webhook(self, raidinfo, lat, lon, team):
         """ Send a discord notification via webhook

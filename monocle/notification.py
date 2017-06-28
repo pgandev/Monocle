@@ -799,7 +799,12 @@ class Notifier:
         return await self.wh_send(session, data)
 
     def raid_eligible(self, raidinfo):
-        if (raidinfo['raid_seed'] not in self.raid_cache):
+        cache_key = raidinfo['raid_seed']
+
+        if (raidinfo.HasField('pokemon_id'):
+            cache_key += raidinfo['pokemon_id']
+    
+        if (cache_key not in self.raid_cache):
             return raidinfo['raid_level'] >= conf.RAID_LEVEL_MIN;
 
         return False
@@ -811,9 +816,6 @@ class Notifier:
         if not conf.RAID_WEBHOOK:
             return None
 
-        name = POKEMON[raidinfo['pokemon_id']]
-        self.log.info('Parsing webhook for {}.', name)
-
         if conf.TZ_OFFSET:
             _tz = timezone(timedelta(hours=conf.TZ_OFFSET))
         else:
@@ -822,9 +824,6 @@ class Notifier:
         end = datetime.fromtimestamp(raidinfo['raid_end'], _tz)
 
         map = self.get_gmaps_link(lat, lon)
-
-        move_1 = MOVES[raidinfo['move_1']]
-        move_2 = MOVES[raidinfo['move_2']]
         
         details = {
             'street_num': 'unkn', 'street': 'unknown', 'address': 'unknown', 'postal': 'unknown',
@@ -848,22 +847,44 @@ class Notifier:
         details['county'] = loc.get('administrative_area_level_2', 'unknown')
         details['state'] = loc.get('administrative_area_level_1', 'unknown')
         details['country'] = loc.get('country', 'unknown')
+		
+		if (raidinfo.HasField('pokemon_id'):
+			name = POKEMON[raidinfo['pokemon_id']]
+			move_1 = MOVES[raidinfo['move_1']]
+			move_2 = MOVES[raidinfo['move_2']]
+			payload = {
+				'username': '{p} Boss'.format(p=name)
+				'embeds': [{
+					'title': '{p} Raid!'.format(p=name)
+					'url': map,
+					'description': '**Level:** {l} - **CP:** {c}\n**Address:** {a}, {cty}\n**County:** {cnty}\n\n**Moveset:** {m1}/{m2}\n\n**Start:** {s}\n**End:** {e}\n\n**Current Team:** {t}\n\n**Map:** {m}'.format(
+						l=raidinfo['raid_level'], c=raidinfo['cp'], m1=move_1, m2=move_2,
+						s=start.strftime('%I:%M %p').lstrip('0'), e=end.strftime('%I:%M %p').lstrip('0'), t=team, m=map,
+						a=details['address'], cty=details['city'], cnty=details['county']
+					),
+					'thumbnail': {'url': 'https://raw.githubusercontent.com/kvangent/PokeAlarm/master/icons/{i}.png'.format(i=raidinfo['pokemon_id']) }
+				}]
+			}
+		else:
+			payload = {
+				'username': 'Level {l} Raid'.format(l=raidinfo['raid_level'])
+				'embeds': [{
+					'title': 'Level {l} Raid Starting Soon!'.format(l=raidinfo['raid_level'])
+					'url': map,
+					'description': '**Level:** {l}\n**Address:** {a}, {cty}\n**County:** {cnty}\n\n**Start:** {s}\n**End:** {e}\n\n**Current Team:** {t}\n\n**Map:** {m}'.format(
+						l=raidinfo['raid_level'], s=start.strftime('%I:%M %p').lstrip('0'), e=end.strftime('%I:%M %p').lstrip('0'), t=team, m=map,
+						a=details['address'], cty=details['city'], cnty=details['county']
+					),
+					'thumbnail': {'url': 'https://raw.githubusercontent.com/pgandev/Monocle/develop_pgan/monocle/static/img/egg-{l}.png'.format(l=raidinfo['raid_level']) }
+				}]
+			}        
+        
+        cache_key = raidinfo['raid_seed']
+        
+        if (raidinfo.HasField('pokemon_id'):
+            cache_key += raidinfo['pokemon_id']
 
-        payload = {
-            'username': '{p} Boss'.format(p=name),
-            'embeds': [{
-                'title': '{p} Raid!'.format(p=name),
-                'url': map,
-                'description': '**Level:** {l} - **CP:** {c}\n**Address:** {a}, {cty}\n**County:** {cnty}\n\n**Moveset:** {m1}/{m2}\n\n**Start:** {s}\n**End:** {e}\n\n**Current Team:** {t}\n\n**Map:** {m}'.format(
-                    l=raidinfo['raid_level'], c=raidinfo['cp'], m1=move_1, m2=move_2,
-                    s=start.strftime('%I:%M %p').lstrip('0'), e=end.strftime('%I:%M %p').lstrip('0'), t=team, m=map,
-                    a=details['address'], cty=details['city'], cnty=details['county']
-                ),
-                'thumbnail': {'url': 'https://raw.githubusercontent.com/kvangent/PokeAlarm/master/icons/{i}.png'.format(i=raidinfo['pokemon_id']) }
-            }]
-        }
-
-        self.raid_cache.add(raidinfo['raid_seed'], 3600)
+        self.raid_cache.add(cache_key, 3600)
         payload['embeds'][0]['image'] = {'url': self.get_static_map_url(lat, lon, conf.GOOGLE_MAPS_KEY)}
 
         session = SessionManager.get()

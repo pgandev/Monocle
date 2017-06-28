@@ -801,9 +801,10 @@ class Notifier:
     def raid_eligible(self, raidinfo):
         cache_key = raidinfo['raid_seed']
 
-        if (raidinfo.HasField('pokemon_id'):
+        if (raidinfo.HasField('pokemon_id')):
             cache_key += raidinfo['pokemon_id']
-    
+
+        self.log.info('cache_key {}'.format(cache_key))
         if (cache_key not in self.raid_cache):
             return raidinfo['raid_level'] >= conf.RAID_LEVEL_MIN;
 
@@ -847,41 +848,41 @@ class Notifier:
         details['county'] = loc.get('administrative_area_level_2', 'unknown')
         details['state'] = loc.get('administrative_area_level_1', 'unknown')
         details['country'] = loc.get('country', 'unknown')
-		
-		if (raidinfo.HasField('pokemon_id'):
-			name = POKEMON[raidinfo['pokemon_id']]
-			move_1 = MOVES[raidinfo['move_1']]
-			move_2 = MOVES[raidinfo['move_2']]
-			payload = {
-				'username': '{p} Boss'.format(p=name)
-				'embeds': [{
-					'title': '{p} Raid!'.format(p=name)
-					'url': map,
-					'description': '**Level:** {l} - **CP:** {c}\n**Address:** {a}, {cty}\n**County:** {cnty}\n\n**Moveset:** {m1}/{m2}\n\n**Start:** {s}\n**End:** {e}\n\n**Current Team:** {t}\n\n**Map:** {m}'.format(
-						l=raidinfo['raid_level'], c=raidinfo['cp'], m1=move_1, m2=move_2,
-						s=start.strftime('%I:%M %p').lstrip('0'), e=end.strftime('%I:%M %p').lstrip('0'), t=team, m=map,
-						a=details['address'], cty=details['city'], cnty=details['county']
-					),
-					'thumbnail': {'url': 'https://raw.githubusercontent.com/kvangent/PokeAlarm/master/icons/{i}.png'.format(i=raidinfo['pokemon_id']) }
-				}]
-			}
-		else:
-			payload = {
-				'username': 'Level {l} Raid'.format(l=raidinfo['raid_level'])
-				'embeds': [{
-					'title': 'Level {l} Raid Starting Soon!'.format(l=raidinfo['raid_level'])
-					'url': map,
-					'description': '**Level:** {l}\n**Address:** {a}, {cty}\n**County:** {cnty}\n\n**Start:** {s}\n**End:** {e}\n\n**Current Team:** {t}\n\n**Map:** {m}'.format(
-						l=raidinfo['raid_level'], s=start.strftime('%I:%M %p').lstrip('0'), e=end.strftime('%I:%M %p').lstrip('0'), t=team, m=map,
-						a=details['address'], cty=details['city'], cnty=details['county']
-					),
-					'thumbnail': {'url': 'https://raw.githubusercontent.com/pgandev/Monocle/develop_pgan/monocle/static/img/egg-{l}.png'.format(l=raidinfo['raid_level']) }
-				}]
-			}        
+        
+        if (raidinfo.HasField('pokemon_id')):
+            name = POKEMON[raidinfo['pokemon_id']]
+            move_1 = MOVES[raidinfo['move_1']]
+            move_2 = MOVES[raidinfo['move_2']]
+            payload = {
+                'username': '{p} Boss'.format(p=name),
+                'embeds': [{
+                    'title': '{p} Raid!'.format(p=name),
+                    'url': map,
+                    'description': '**Level:** {l} - **CP:** {c}\n**Address:** {a}, {cty}\n**County:** {cnty}\n\n**Moveset:** {m1}/{m2}\n\n**Start:** {s}\n**End:** {e}\n\n**Current Team:** {t}\n\n**Map:** {m}'.format(
+                        l=raidinfo['raid_level'], c=raidinfo['cp'], m1=move_1, m2=move_2,
+                        s=start.strftime('%I:%M %p').lstrip('0'), e=end.strftime('%I:%M %p').lstrip('0'), t=team, m=map,
+                        a=details['address'], cty=details['city'], cnty=details['county']
+                    ),
+                    'thumbnail': {'url': 'https://raw.githubusercontent.com/kvangent/PokeAlarm/master/icons/{i}.png'.format(i=raidinfo['pokemon_id']) }
+                }]
+            }
+        else:
+            payload = {
+                'username': 'Level {l} Raid'.format(l=raidinfo['raid_level']),
+                'embeds': [{
+                    'title': 'Level {l} Raid Starting Soon!'.format(l=raidinfo['raid_level']),
+                    'url': map,
+                    'description': '**Level:** {l}\n**Address:** {a}, {cty}\n**County:** {cnty}\n\n**Start:** {s}\n**End:** {e}\n\n**Current Team:** {t}\n\n**Map:** {m}'.format(
+                        l=raidinfo['raid_level'], s=start.strftime('%I:%M %p').lstrip('0'), e=end.strftime('%I:%M %p').lstrip('0'), t=team, m=map,
+                        a=details['address'], cty=details['city'], cnty=details['county']
+                    ),
+                    'thumbnail': {'url': 'https://raw.githubusercontent.com/pgandev/Monocle/develop_pgan/monocle/static/img/egg-{l}.png'.format(l=raidinfo['raid_level']) }
+                }]
+            }        
         
         cache_key = raidinfo['raid_seed']
         
-        if (raidinfo.HasField('pokemon_id'):
+        if (raidinfo.HasField('pokemon_id')):
             cache_key += raidinfo['pokemon_id']
 
         self.raid_cache.add(cache_key, 3600)

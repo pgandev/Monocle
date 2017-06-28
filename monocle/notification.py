@@ -801,7 +801,7 @@ class Notifier:
     def raid_eligible(self, raidinfo):
         cache_key = raidinfo['raid_seed']
 
-        if hasattr(raidinfo, 'pokemon_id'):
+        if 'pokemon_id' in raidinfo:
             cache_key += raidinfo['pokemon_id']
 
         self.log.info('cache_key {}'.format(cache_key))
@@ -849,7 +849,7 @@ class Notifier:
         details['state'] = loc.get('administrative_area_level_1', 'unknown')
         details['country'] = loc.get('country', 'unknown')
         
-        if hasattr(raidinfo, 'pokemon_id'):
+        if 'pokemon_id' in raidinfo:
             name = POKEMON[raidinfo['pokemon_id']]
             move_1 = MOVES[raidinfo['move_1']]
             move_2 = MOVES[raidinfo['move_2']]
@@ -882,7 +882,7 @@ class Notifier:
         
         cache_key = raidinfo['raid_seed']
         
-        if hasattr(raidinfo, 'pokemon_id'):
+        if 'pokemon_id' in raidinfo:
             cache_key += raidinfo['pokemon_id']
 
         self.raid_cache.add(cache_key, 3600)
